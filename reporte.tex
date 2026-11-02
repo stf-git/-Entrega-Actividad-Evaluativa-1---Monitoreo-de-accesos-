@@ -1,0 +1,94 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.96,0.96,0.96}
+
+\lstdefinestyle{javastyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    numbers=left,
+    numbersep=5pt,
+    tabsize=2,
+    showstringspaces=false
+}
+\lstset{style=javastyle}
+
+\title{\textbf{Actividad Evaluativa \#1: Centro de Monitoreo de Accesos}\\ \large Programación Orientada a Objetos --- Grado en Ciberseguridad}
+\author{ENTI -- Universitat de Barcelona}
+\date{23 de octubre de 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción y Objetivos}
+El presente informe documenta el desarrollo del sistema de análisis y monitoreo de autenticación para dos servidores independientes. La solución implementa el paradigma de Programación Orientada a Objetos (POO) en Java, encapsulando en la clase \texttt{Servidor} el estado y los métodos de validación, cálculo de métricas y evaluación de riesgo bajo directrices de seguridad.
+
+\section{Diseño Orientado a Objetos}
+El sistema consta de dos clases estructuradas en el archivo \texttt{Main.java}:
+\begin{itemize}
+    \item \textbf{Clase Servidor:} Modela la entidad del servidor con cinco atributos de instancia (\texttt{nombre}, \texttt{origen}, \texttt{critico}, \texttt{intentosTotales}, \texttt{intentosFallidos}). Expone métodos para:
+    \begin{itemize}
+        \item \texttt{datosValidos()}: Validación lógica y saneamiento de entradas (\texttt{trim()}, \texttt{toLowerCase()}).
+        \item \texttt{evaluarEstado()}: Asignación jerárquica de niveles de severidad (\texttt{BLOQUEADO}, \texttt{ALERTA}, \texttt{NORMAL}, \texttt{DATOS INVALIDOS}).
+        \item \texttt{porcentajeFallos()}: Cálculo fraccionario en coma flotante (\texttt{double}).
+        \item \texttt{mostrarResumen()}: Presentación formateada de registros de seguridad.
+    \end{itemize}
+    \item \textbf{Clase Main:} Orquesta la entrada por consola mediante \texttt{Scanner}, instancia dos objetos independientes de tipo \texttt{Servidor} y determina la prioridad operativa.
+\end{itemize}
+
+\section{Respuestas a las Preguntas Conceptuales}
+\begin{enumerate}
+    \item \textbf{¿Por qué dos objetos de la misma clase pueden almacenar valores diferentes en sus atributos?} \\
+    Porque una clase define la estructura o molde tipificado, mientras que la invocación del operador \texttt{new} instancia un espacio de memoria independiente (en el \textit{heap}) para cada objeto. Cada entidad posee su propio bloque de variables de instancia, permitiendo que la mutación de estado en un objeto no afecte al otro.
+
+    \item \textbf{¿Qué diferencia existe entre \texttt{Servidor b = a;} y \texttt{Servidor b = new Servidor();}?}\\
+    La sentencia \texttt{Servidor b = new Servidor();} construye físicamente un nuevo objeto en memoria y asigna su puntero/referencia a la variable \texttt{b}. En contraste, \texttt{Servidor b = a;} únicamente copia la dirección de memoria referenciada por \texttt{a} en \texttt{b}; ambos identificadores apuntan a la misma instancia subyacente, compartiendo cualquier modificación posterior.
+
+    \item \textbf{¿Por qué es importante comprobar \texttt{datosValidos()} antes de calcular el porcentaje?} \\
+    Por consistencia numérica y prevención de anomalías en tiempo de ejecución:
+    \begin{itemize}
+        \item Si \texttt{intentosTotales} fuese $0$, la operación aritmética provocaría una indeterminación matemática (\texttt{NaN} o \texttt{Infinity} en tipos \texttt{double}).
+        \item Si la muestra no satisface los axiomas del modelo (por ejemplo, registros con fallos superiores al total), el porcentaje resultante generaría falsas métricas en los informes de auditoría.
+    \end{itemize}
+\end{enumerate}
+
+\section{Casos de Prueba y Resultados}
+A continuación se detalla la matriz de pruebas ejecutada para verificar el cumplimiento de las reglas de clasificación:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Servidor} & \textbf{Origen} & \textbf{Crítico} & \textbf{Totales} & \textbf{Fallidos} & \textbf{Estado Obtenido} \\ \midrule
+VPN & externo & si & 10 & 3 & BLOQUEADO \\
+WEB & interno & no & 8 & 4 & ALERTA \\
+CORREO & externo & no & 8 & 2 & ALERTA \\
+VPN & interno & si & 12 & 2 & NORMAL \\
+WEB & externo & no & 5 & 5 & BLOQUEADO \\
+WEB & interno & no & 4 & 5 & DATOS INVALIDOS \\
+WEB & interno & no & 0 & 0 & DATOS INVALIDOS \\
+CORREO & local & no & 10 & 2 & DATOS INVALIDOS \\
+WEB & externo & quizás & 10 & 2 & DATOS INVALIDOS \\
+VPN & " EXTERNO " & " SI " & 10 & 3 & BLOQUEADO (Trim OK) \\ \bottomrule
+\end{tabular}
+\caption{Matriz de validación y casos límite.}
+\end{table}
+
+\end{document}
